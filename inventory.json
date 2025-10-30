@@ -1,0 +1,18 @@
+[
+  {
+    "id": "aws-1",
+    "provider": "aws",
+    "token_type": "aws_secret_access_key",
+    "token_value": "AKIAEXAMPLESECRET",
+    "owner": "team-a@example.com",
+    "notes": "test key for assignment"
+  },
+  {
+    "id": "github-1",
+    "provider": "github",
+    "token_type": "github_personal_access_token",
+    "token_value": "ghp_exampletokenvalue",
+    "owner": "dev1@example.com",
+    "notes": "personal token"
+  }
+]
