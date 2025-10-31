@@ -10,10 +10,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// Struct for JSON request body
+type ScanRequest struct {
+	URL string `json:"url" binding:"required"`
+}
+
 func ScanRepo(c *gin.Context, cfg *setup.Config) {
-	repoURL := c.Param("url")
-	if repoURL == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "repo URL is required"})
+	var req ScanRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil || req.URL == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "repo URL is required in JSON body"})
 		return
 	}
 
@@ -24,9 +30,10 @@ func ScanRepo(c *gin.Context, cfg *setup.Config) {
 	resultChan := make(chan scanner.LeakResult, 100)
 	errChan := make(chan error, 10)
 
-	repoChan <- repoURL
+	repoChan <- req.URL
 	close(repoChan)
 
+	// Start the scanner
 	go scanner.StartScanner(
 		ctx,
 		cfg.GitHubToken,
@@ -48,9 +55,10 @@ func ScanRepo(c *gin.Context, cfg *setup.Config) {
 		for r := range resultChan {
 			results = append(results, r)
 		}
-		done <- struct{}{}
+		close(done)
 	}()
 
+	// Collect errors while results are being processed
 	for err := range errChan {
 		errors = append(errors, err.Error())
 	}
@@ -58,7 +66,7 @@ func ScanRepo(c *gin.Context, cfg *setup.Config) {
 	<-done
 
 	c.JSON(http.StatusOK, gin.H{
-		"repo":    repoURL,
+		"repo":    req.URL,
 		"results": results,
 		"errors":  errors,
 		"status":  "scan complete",
