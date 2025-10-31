@@ -302,12 +302,11 @@ func scanFile(ctx context.Context, client *github.Client, owner, repo, filePath 
 				Timestamp:   time.Now().UTC(),
 			}
 
-			// emit result, respecting ctx
 			select {
 			case <-ctx.Done():
 				return ctx.Err()
 			case resultChan <- lr:
-				// result sent
+
 			}
 		}
 	}
