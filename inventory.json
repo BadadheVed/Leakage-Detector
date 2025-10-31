@@ -4,7 +4,7 @@
     "provider": "aws",
     "token_type": "aws_secret_access_key",
     "token_value": "AKIAEXAMPLESECRET",
-    "owner": "team-a@example.com",
+    "owner": "vbbadadhe@gmail.com",
     "notes": "test key for assignment"
   },
   {
@@ -12,7 +12,7 @@
     "provider": "github",
     "token_type": "github_personal_access_token",
     "token_value": "ghp_exampletokenvalue",
-    "owner": "dev1@example.com",
+    "owner": "vbbadadhe@gmail.com",
     "notes": "personal token"
   }
 ]

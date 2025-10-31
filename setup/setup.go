@@ -11,26 +11,24 @@ import (
 type Config struct {
 	GitHubToken string
 
-	SMTPServer    string
+	SMTPHost      string
 	SMTPPort      string
 	SMTPUser      string
-	SMTPPassword  string
+	SMTPPass      string
 	InventoryPath string
 }
 
-// Setup initializes configuration from .env or environment variables
 func Setup() *Config {
-	// Load .env if available
 	if err := godotenv.Load(); err != nil {
 		log.Println("[INFO] .env file not found — using system environment variables.")
 	}
 
 	cfg := &Config{
 		GitHubToken:   os.Getenv("GITHUB_TOKEN"),
-		SMTPServer:    os.Getenv("SMTP_SERVER"),
+		SMTPHost:      os.Getenv("SMTP_HOST"),
 		SMTPPort:      os.Getenv("SMTP_PORT"),
 		SMTPUser:      os.Getenv("SMTP_USER"),
-		SMTPPassword:  os.Getenv("SMTP_PASSWORD"),
+		SMTPPass:      os.Getenv("SMTP_PASS"),
 		InventoryPath: os.Getenv("INVENTORY_PATH"),
 	}
 

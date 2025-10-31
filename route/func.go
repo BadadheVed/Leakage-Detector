@@ -2,11 +2,15 @@ package route
 
 import (
 	"context"
+	"encoding/json"
+	"log"
 	"net/http"
+	"os"
 	"time"
 
 	scanner "github.com/BadadheVed/leakage-detector/scanner"
 	"github.com/BadadheVed/leakage-detector/setup"
+	"github.com/BadadheVed/leakage-detector/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -58,12 +62,43 @@ func ScanRepo(c *gin.Context, cfg *setup.Config) {
 		close(done)
 	}()
 
-	// Collect errors while results are being processed
 	for err := range errChan {
 		errors = append(errors, err.Error())
 	}
 
 	<-done
+
+	inventoryData, _ := os.ReadFile(cfg.InventoryPath)
+	var inventory []scanner.InventoryItem
+	_ = json.Unmarshal(inventoryData, &inventory)
+
+	if len(results) == 0 {
+		log.Printf("✅ No leaks found in repo: %s", req.URL)
+	} else {
+		log.Printf("🚨 %d potential leaks detected in repo: %s", len(results), req.URL)
+	}
+
+	for _, result := range results {
+		for _, item := range inventory {
+			if result.Matched == item.TokenValue {
+				log.Printf("Leak matched for key: %s (owner: %s)", item.TokenType, item.Owner)
+				go func(i scanner.InventoryItem) {
+					if err := utils.SendLeakAlertMail(
+						cfg.SMTPHost,
+						cfg.SMTPPort,
+						cfg.SMTPUser,
+						cfg.SMTPPass,
+						i.Owner,
+						i.TokenType,
+						i.TokenValue,
+						req.URL,
+					); err != nil {
+						log.Printf("❌ Error sending email to %s: %v", i.Owner, err)
+					}
+				}(item)
+			}
+		}
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"repo":    req.URL,

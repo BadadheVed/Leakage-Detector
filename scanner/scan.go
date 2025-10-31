@@ -48,10 +48,10 @@ func StartScanner(
 	fileWorkerCount int,
 	inventoryPath string,
 ) {
-	// Load inventory once
+
 	inv, err := LoadInventory(inventoryPath)
 	if err != nil {
-		// Can't proceed without inventory — report and exit
+
 		errChan <- fmt.Errorf("failed to load inventory: %w", err)
 		close(resultChan)
 		close(errChan)

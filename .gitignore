@@ -1,4 +1,4 @@
-# Binaries for programs and plugins
+
 *.exe
 *.exe~
 *.dll
@@ -6,7 +6,6 @@
 *.dylib
 *.test
 
-# Build output
 *.out
 
 # Go build cache
