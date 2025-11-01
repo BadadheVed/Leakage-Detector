@@ -11,10 +11,6 @@ func RegisterRoutes(r *gin.Engine, setup *setup.Config) {
 		c.JSON(200, gin.H{"status": "ok"})
 	})
 
-	r.GET("/repo/:url", func(c *gin.Context) {
-		ScanRepo(c, setup)
-	})
-
 	r.POST("/repo/scan", func(c *gin.Context) {
 		ScanRepo(c, setup)
 	})

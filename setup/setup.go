@@ -36,7 +36,6 @@ func Setup() *Config {
 	return cfg
 }
 
-// validateConfig ensures required fields have defaults or warnings
 func validateConfig(cfg *Config) {
 	if cfg.InventoryPath == "" {
 		cfg.InventoryPath = "inventory.json"

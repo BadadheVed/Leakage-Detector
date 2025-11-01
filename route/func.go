@@ -93,7 +93,7 @@ func ScanRepo(c *gin.Context, cfg *setup.Config) {
 						i.TokenValue,
 						req.URL,
 					); err != nil {
-						log.Printf("❌ Error sending email to %s: %v", i.Owner, err)
+						log.Printf("Error sending email to %s: %v", i.Owner, err)
 					}
 				}(item)
 			}

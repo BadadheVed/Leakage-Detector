@@ -15,7 +15,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// InventoryItem matches your inventory.json schema
+// InventoryItem matched inventory.json schema
 type InventoryItem struct {
 	ID         string `json:"id"`
 	Provider   string `json:"provider"`
@@ -25,7 +25,6 @@ type InventoryItem struct {
 	Notes      string `json:"notes"`
 }
 
-// LeakResult is emitted for each detected leak
 type LeakResult struct {
 	InventoryID string    `json:"inventory_id"`
 	Provider    string    `json:"provider"`
