@@ -24,7 +24,6 @@ type InventoryItem struct {
 	Notes      string `json:"notes"`
 }
 
-// LeakResult is emitted for each detected leak
 type LeakResult struct {
 	InventoryID string    `json:"inventory_id"`
 	Provider    string    `json:"provider"`
@@ -35,6 +34,7 @@ type LeakResult struct {
 	BlobURL     string    `json:"blob_url"`
 	Snippet     string    `json:"snippet"`
 	Timestamp   time.Time `json:"timestamp"`
+	Confidence  float64   `json:"confidence"`
 }
 
 func StartScanner(
@@ -110,17 +110,14 @@ func StartScanner(
 		}(i + 1)
 	}
 
-	// Wait for workers then close result and error channels
 	go func() {
 		wg.Wait()
-		// close channels to signal caller no more results
 		close(resultChan)
 		close(errChan)
 		log.Printf("[scanner] all workers finished, closed result and error channels\n")
 	}()
 }
 
-// LoadInventory loads inventory.json (or any JSON file with the same schema)
 func LoadInventory(path string) ([]InventoryItem, error) {
 	b, err := os.ReadFile(path)
 	if err != nil {
@@ -133,8 +130,6 @@ func LoadInventory(path string) ([]InventoryItem, error) {
 	return inv, nil
 }
 
-// jsonUnmarshal is a tiny wrapper so we can change unmarshalling behavior easily later.
-// Using encoding/json directly here keeps it simple.
 func jsonUnmarshal(b []byte, v interface{}) error {
 	return json.Unmarshal(b, v)
 }
@@ -284,10 +279,13 @@ func scanFile(ctx context.Context, client *github.Client, owner, repo, filePath 
 		if strings.TrimSpace(it.TokenValue) == "" {
 			continue
 		}
-		if strings.Contains(content, it.TokenValue) {
 
+		// Calculate confidence score (case-sensitive)
+		confidence := calculateConfidence(content, it.TokenValue)
+
+		// Only report if confidence is greater than 50%
+		if confidence > 0.5 {
 			snippet := extractSnippet(content, it.TokenValue, 120)
-
 			blobURL := buildBlobURL(owner, repo, filePath)
 
 			lr := LeakResult{
@@ -300,18 +298,44 @@ func scanFile(ctx context.Context, client *github.Client, owner, repo, filePath 
 				BlobURL:     blobURL,
 				Snippet:     snippet,
 				Timestamp:   time.Now().UTC(),
+				Confidence:  confidence,
 			}
 
 			select {
 			case <-ctx.Done():
 				return ctx.Err()
 			case resultChan <- lr:
-
+				log.Printf("[scanFile] Found leak with %.2f%% confidence in %s/%s/%s\n",
+					confidence*100, owner, repo, filePath)
 			}
+		} else {
+			log.Printf("[scanFile] Low confidence match (%.2f%%) for token %s in %s/%s/%s - skipping\n",
+				confidence*100, it.ID, owner, repo, filePath)
 		}
 	}
 
 	return nil
+}
+
+func calculateConfidence(content, token string) float64 {
+
+	if strings.Contains(content, token) {
+		return 1.0
+	}
+
+	matchCount := 0
+	for i := 0; i < len(token); i++ {
+		if strings.ContainsRune(content, rune(token[i])) {
+			matchCount++
+		}
+	}
+
+	conf := float64(matchCount) / float64(len(token))
+	if conf > 1.0 {
+		conf = 1.0
+	}
+
+	return conf
 }
 
 func extractSnippet(content, token string, maxLen int) string {
