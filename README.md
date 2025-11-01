@@ -259,7 +259,15 @@ docker build -t leak-detector:latest .
 
 Run (example):
 ```bash
-docker run --env-file .env -p 8080:8080 leak-detector:latest
+docker run -e GITHUB_TOKEN=<YOUR_GITHUB_PAT> \
+           -e SMTP_PORT=587 \
+           -e SMTP_USER=<YOUR_EMAIL> \
+           -e SMTP_PASSWORD=<GMAIL_APP_PASSWORD> \
+           -e INVENTORY_PATH=inventory.json \
+           -e SMTP_HOST=smtp.gmail.com \
+           -e WORKER_COUNT=<YOUR DESIRED WORKER COUNT> \
+           
+           leak-detector
 ```
 
 Ensure `inventory.json` is present inside the container image (or mount it via a volume) and that `.env` contains valid credentials.
