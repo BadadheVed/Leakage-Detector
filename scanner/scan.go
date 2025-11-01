@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -71,6 +72,11 @@ func StartScanner(
 	var wg sync.WaitGroup
 
 	workerCount := 4
+	workers := os.Getenv("WORKER_COUNT")
+	if n, err := strconv.Atoi(workers); err == nil && n > 0 {
+		workerCount = n
+	}
+
 	for i := 0; i < workerCount; i++ {
 		wg.Add(1)
 		go func(workerID int) {
